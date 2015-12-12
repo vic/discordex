@@ -8,6 +8,10 @@ search if anyone has reported or is working on the feature you want
 before duplicating effort.
 
 
+## Discord Documentation
+
+http://discordapi-unoffical.readthedocs.org/en/latest/index.html
+
 ## Testing
 
 Read http://blog.plataformatec.com.br/2015/10/mocks-and-explicit-contracts/
