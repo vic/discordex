@@ -1,2 +1,2 @@
 use Mix.Config
-config :discordex, :api, Discordex.API.Test
+config :discordex, :http_client, Discordex.HttpTestClient

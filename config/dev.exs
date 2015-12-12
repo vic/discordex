@@ -1,2 +1,2 @@
 use Mix.Config
-config :discordex, :api, Discordex.API.HTTP
+config :discordex, :http_client, Discordex.HttpPoisonClient
