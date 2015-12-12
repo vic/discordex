@@ -27,6 +27,7 @@ defmodule Discordex.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    []
+    [{:poison, "~> 1.5"},
+     {:httpoison, "~> 0.8"}]
   end
 end
