@@ -12,7 +12,8 @@ defmodule Discordex.API.AuthenticationTest do
 
   test ".login returns Discordex.Client for valid credentials" do
     assert {:ok, client} = API.login("email", "password")
-    assert %{__struct__: Discordex.Client} = client
+    assert %{__struct__: Discordex.Client, token: token} = client
+    assert token
   end
 
 end
