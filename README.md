@@ -1,6 +1,6 @@
 # Discordex
 
-**TODO: Add description**
+Discord API for Elixir
 
 ## Installation
 
