@@ -15,7 +15,7 @@ defmodule Discordex.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger]]
+    [applications: [:logger, :httpoison, :yaml_elixir]]
   end
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
@@ -35,7 +35,9 @@ defmodule Discordex.Mixfile do
       {:poison, "~> 1.5"},
       {:httpoison, "~> 0.8"},
       {:mix_test_watch, "~> 0.2", only: :dev},
-      {:credo, "~> 0.1.9", only: [:dev, :test]}
+      {:credo, "~> 0.1.9", only: [:dev, :test]},
+      {:yaml_elixir, "~> 1.0.0"},
+      {:yamerl, github: "yakaz/yamerl"}
     ]
   end
 end

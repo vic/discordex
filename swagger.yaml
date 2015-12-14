@@ -26,7 +26,7 @@ basePath: /api
 schemes:
   - https
   # - ws
-  - wss
+  # - wss
 produces:
   - application/json
 consumes:
@@ -58,6 +58,19 @@ parameters:
     description: The Message id
     type: string
     required: true
+  guild_id:
+    name: guild_id
+    in: path
+    description: The Guild (server) id
+    type: string
+    required: true
+  invite_slug:
+    name: invite_slug
+    description: |
+      Can be a human readable slug like this: run-bob-windrunner or like this: 0hQ6TaywsrEIXHXW'
+    in: path
+    required: true
+    type: string
   content:
     name: content
     in: body
@@ -72,7 +85,6 @@ parameters:
       type: array
       items:
         $ref: '#/definitions/Mention'
-
 paths:
   # TODO: Missing endpoints
   # /channels/{channel_id}/permissions/{user_id}
@@ -93,6 +105,7 @@ paths:
 
   /auth/register:
     post:
+      operationId: register
       description: Create User
       parameters:
         - name: email
@@ -124,6 +137,7 @@ paths:
 
   /auth/login:
     post:
+      operationId: login
       description: Login current User
       parameters:
         - name: email
@@ -147,6 +161,7 @@ paths:
 
   /auth/logout:
     post:
+      operationId: logout
       description: Log out current user
       responses:
         '200':
@@ -154,6 +169,7 @@ paths:
 
   /gateway:
     get:
+      operationId: gateway
       description: WSS (Secured WebSocket) Gateway
       responses:
         '200':
@@ -165,14 +181,17 @@ paths:
                 $ref: '#/definitions/Gateway'
 
   '/users/{user_id}':
-    parameters:
-      - $ref: '#/parameters/user_id'
+    # parameters:
+    #   - $ref: '#/parameters/user_id'
     get:
+      operationId: get_user
       security:
         - key: []
         - oauth:
             - basic
       description: Get basic information about a user.
+      parameters:
+        - $ref: '#/parameters/user_id'
       responses:
         '200':
           description: The user object
@@ -191,7 +210,8 @@ paths:
 
   /users/@me:
     get:
-      description: Maybe?? Get the authenticated user
+      operationId: get_me
+      description: Get the authenticated user
       responses:
         '200':
           description: User profile
@@ -203,6 +223,7 @@ paths:
                 items:
                   $ref: '#/definitions/User'
     patch:
+      operationId: update_me
       description: Update user
       parameters:
         - name: avatar
@@ -241,7 +262,8 @@ paths:
 
   /users/@me/devices:
     post:
-      description: Add a device
+      operationId: create_device
+      description: Create a device
       parameters:
         - name: provider
           in: body
@@ -255,8 +277,9 @@ paths:
         '204':
           description: Device added successfully
 
-  'users/@me/settings':
+  /users/@me/settings:
     patch:
+      operationId: update_settings
       description: Update your UserSettings
       parameters:
         - name: theme
@@ -274,6 +297,7 @@ paths:
 
   '/users/{user_id}/channels':
     post:
+      operationId: create_private_channel
       description: Create a private channel
       parameters:
         - $ref: '#/parameters/user_id'
@@ -290,14 +314,20 @@ paths:
 
   '/channels/{channel_id}':
     get:
+      operationId: get_channel
       description: Get Channel
+      parameters:
+        - $ref: '#/parameters/channel_id'
       responses:
         '200':
           description: Channel
           schema:
             $ref: '#/definitions/Channel'
     delete:
+      operationId: delete_channel
       description: Delete Channel
+      parameters:
+        - $ref: '#/parameters/channel_id'
       responses:
         '200':
           description: Channel
@@ -310,6 +340,7 @@ paths:
               message:
                 type: string
     patch:
+      operationId: update_channel
       description: Update Channel
       parameters:
         - $ref: '#/parameters/channel_id'
@@ -336,6 +367,7 @@ paths:
 
   '/channels/{channel_id}/messages':
     get:
+      operationId: get_channel_messages
       description: Get Messages from a Channel
       parameters:
         - $ref: '#/parameters/channel_id'
@@ -365,6 +397,7 @@ paths:
               message:
                 type: string
     post:
+      operationId: send_channel_message
       description: Send a Message to a Channel
       parameters:
         - $ref: '#/parameters/channel_id'
@@ -397,6 +430,7 @@ paths:
 
   '/channels/{channel_id}/messages/{message_id}':
     patch:
+      operationId: edit_channel_message
       description: Edit Message
       parameters:
         - $ref: '#/parameters/channel_id'
@@ -411,13 +445,18 @@ paths:
 
   '/channels/{channel_id}/messages/{message_id}/ack':
     post:
+      operationId: ack_channel_message
       description: Acknowledge a Message
+      parameters:
+        - $ref: '#/parameters/channel_id'
+        - $ref: '#/parameters/message_id'
       responses:
         '200':
           description: OK
 
   '/channels/{channel_id}/invites':
     get:
+      operationId: get_channel_invites
       description: Get a list of InstantInvites to a Channel
       parameters:
         - $ref: '#/parameters/channel_id'
@@ -429,6 +468,7 @@ paths:
             items:
               $ref: '#/definitions/InstantInvite'
     post:
+      operationId: create_channel_invite
       description: Create an InstantInvite to a Channel
       parameters:
         - $ref: '#/parameters/channel_id'
@@ -467,15 +507,10 @@ paths:
 
   '/invite/{invite_slug}':
     get:
+      operationId: claim_invite
       description: Claim an InstantInvite
       parameters:
-        - name: invite_slug
-          description: |
-            Can be a human readable slug like this: run-bob-windrunner or like this: 0hQ6TaywsrEIXHXW'
-          in: path
-          required: true
-          type: string
-        # - $ref: '#/parameters/invite_slug'
+        - $ref: '#/parameters/invite_slug'
       responses:
         '200':
           description: InstantInvite claimed successfully
@@ -489,26 +524,32 @@ paths:
               message:
                 type: string
 
-  '/invites/{invite_id}':
+  '/invites/{invite_slug}':
     delete:
+      operationId: delete_invite
       description: Delete an InstantInvite
       parameters:
-        - $ref: '#/parameters/invite_id'
+        - $ref: '#/parameters/invite_slug'
       responses:
         '200':
 
   '/channels/{channel_id}/typing':
     post:
+      operationId: typing
       description: Extend the 'typing' status 5 seconds
+      parameters:
+        - $ref: '#/parameters/channel_id'
+        - $ref: '#/parameters/message_id'
       responses:
         '200':
           description: OK
 
   '/guilds/{guild_id}':
     get:
+      operationId: get_guild_channels
       description: Get Channels in Guild
       parameters:
-        - $ref: '#/params/guild_id'
+        - $ref: '#/parameters/guild_id'
       responses:
         '200':
           description: Channels in Guild
@@ -517,9 +558,10 @@ paths:
             items:
               $ref: '#/definitions/Channel'
     patch:
+      operationId: update_guild
       description: Update settings for Guild
       parameters:
-        - $ref: '#/params/guild_id'
+        - $ref: '#/parameters/guild_id'
         - name: afk_channel_id
           in: body
           required: true
@@ -557,9 +599,10 @@ paths:
             $ref: '#/definitions/Guild'
 
     post:
+      operationId: create_guild_channel
       description: Create Channel in Guild
       parameters:
-        - $ref: '#/params/guild_id'
+        - $ref: '#/parameters/guild_id'
         - name: name
           in: body
           required: true
@@ -581,6 +624,7 @@ paths:
 
   /guilds:
     post:
+      operationId: create_guild
       description: Create a Guild
       parameters:
         - name: icon
@@ -608,6 +652,7 @@ paths:
 
   /voice/regions:
     get:
+      operationId: regions
       description: Get list of Regions
       responses:
         '200':
@@ -619,6 +664,7 @@ paths:
 
   /track:
     post:
+      operationId: track
       description: Track an Event
       parameters:
         - name: event
