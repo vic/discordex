@@ -106,7 +106,8 @@ paths:
   /auth/register:
     post:
       operationId: register
-      description: Create User
+      # summary: Register a new User
+      description: Register a new User
       parameters:
         - name: email
           in: body
