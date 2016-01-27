@@ -1,0 +1,1031 @@
+swagger: '2.0'
+info:
+  version: unoffical
+  title: Discord API
+  description: |
+    # Unofficial API definition, hopefully will be polished once they release one
+
+    Required headers:
+
+      - user-agent
+
+    ```
+    Some code
+    ```
+  # termsOfService: 'http://discord.com/about/legal/terms/api'
+host: discordapp.com
+
+# TODO: how to support headers with swagger?
+# x-headers:
+#   authorization:
+#     required: false
+#   user-agent:
+#     required: true
+
+basePath: /api
+schemes:
+  - https
+  # - ws
+  # - wss
+produces:
+  - application/json
+consumes:
+  - application/json
+  # - multipart/form-data
+securityDefinitions:
+  key:
+    type: apiKey
+    in: header
+    name: access_token
+security:
+  - api_key: []
+parameters:
+  user_id:
+    name: user_id
+    in: path
+    description: The User id
+    type: string
+    required: true
+  channel_id:
+    name: channel_id
+    in: path
+    description: The Channel id
+    type: string
+    required: true
+  message_id:
+    name: message_id
+    in: path
+    description: The Message id
+    type: string
+    required: true
+  guild_id:
+    name: guild_id
+    in: path
+    description: The Guild (server) id
+    type: string
+    required: true
+  invite_slug:
+    name: invite_slug
+    description: |
+      Can be a human readable slug like this: run-bob-windrunner or like this: 0hQ6TaywsrEIXHXW'
+    in: path
+    required: true
+    type: string
+  content:
+    name: content
+    in: body
+    required: true
+    schema:
+      type: string
+  mentions:
+    name: mentions
+    in: body
+    required: true
+    schema:
+      type: array
+      items:
+        $ref: '#/definitions/Mention'
+paths:
+  # TODO: Missing endpoints
+  # /channels/{channel_id}/permissions/{user_id}
+  # /channels/{channel_id}/permissions/{role_id}
+
+  # /guilds/{server_id}/bans/{user_id}?delete-message-days={message_days}
+  # /guilds/{server_id}/bans/{user_id}
+  # /guilds/{server_id}/members/{user_id}
+  # /guilds/{server_id}/bans
+  # /guilds
+  # /guilds/{server_id}
+  # /guilds/{server_id}
+  # /guilds/{server_id}/channels
+  # /guilds/{server_id}/roles
+  # /guilds/{server_id}/roles/{role_id}
+  # /guilds/{server_id}/roles/{role_id}
+  # /guilds/{server_id}/members/{user_id}
+
+  /auth/register:
+    post:
+      operationId: register
+      # summary: Register a new User
+      description: Register a new User
+      parameters:
+        - name: email
+          in: body
+          type: string
+          required: true
+        - name: password
+          in: body
+          type: string
+          format: password
+          required: true
+        - name: invite
+          in: body
+          type: string # or null
+          required: true
+        - name: username
+          in: body
+          type: string
+          required: true
+      security: []
+      responses:
+        '201':
+          description: User created successfully
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/Client'
+
+  /auth/login:
+    post:
+      operationId: login
+      description: Login current User
+      parameters:
+        - name: email
+          in: body
+          type: string
+          required: true
+        - name: password
+          in: body
+          type: string
+          format: password
+          required: true
+      security: []
+      responses:
+        '200':
+          description: User logged successfully
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/Client'
+
+  /auth/logout:
+    post:
+      operationId: logout
+      description: Log out current user
+      responses:
+        '200':
+          description: Logout successful
+
+  /gateway:
+    get:
+      operationId: gateway
+      description: WSS (Secured WebSocket) Gateway
+      responses:
+        '200':
+          description: Gateway object
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/Gateway'
+
+  '/users/{user_id}':
+    # parameters:
+    #   - $ref: '#/parameters/user_id'
+    get:
+      operationId: get_user
+      security:
+        - key: []
+        - oauth:
+            - basic
+      description: Get basic information about a user.
+      parameters:
+        - $ref: '#/parameters/user_id'
+      responses:
+        '200':
+          description: The user object
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/User'
+        '429':
+          description: Rate limit
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/RateLimitError'
+
+  /users/@me:
+    get:
+      operationId: get_me
+      description: Get the authenticated user
+      responses:
+        '200':
+          description: User profile
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/definitions/User'
+    patch:
+      operationId: update_me
+      description: Update user
+      parameters:
+        - name: avatar
+          in: body
+          description: Avatar URL?
+          type: string
+        - name: email
+          in: body
+          description: Email
+          type: email
+        - name: new_username
+          in: body
+          description: New username
+          type: string
+        - name: new_password
+          in: body
+          description: New password
+          type: string
+          format: password
+        - name: password
+          in: body
+          description: Password
+          type: string
+          format: password
+          # required: true
+      responses:
+        '200':
+          description: User updated successfully
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/definitions/User'
+
+  /users/@me/devices:
+    post:
+      operationId: create_device
+      description: Create a device
+      parameters:
+        - name: provider
+          in: body
+          description: Provider?
+          type: string
+        - name: token
+          in: body
+          description: Device token
+          type: string
+      responses:
+        '204':
+          description: Device added successfully
+
+  /users/@me/settings:
+    patch:
+      operationId: update_settings
+      description: Update your UserSettings
+      parameters:
+        - name: theme
+          in: body
+          schema:
+            type: string
+            enum:
+              - dark
+              - light
+      responses:
+        '200':
+          description: UserSettings updated successfully
+          schema:
+            $ref: '#/definitions/UserSettings'
+
+  '/users/{user_id}/channels':
+    post:
+      operationId: create_private_channel
+      description: Create a private channel
+      parameters:
+        - $ref: '#/parameters/user_id'
+        - name: target_user_id
+          in: body
+          description: Target user id
+          type: string
+          required: true
+      responses:
+        '200':
+          description: Channel created successfully
+          schema:
+            $ref: '#/definitions/Channel'
+
+  '/channels/{channel_id}':
+    get:
+      operationId: get_channel
+      description: Get Channel
+      parameters:
+        - $ref: '#/parameters/channel_id'
+      responses:
+        '200':
+          description: Channel
+          schema:
+            $ref: '#/definitions/Channel'
+    delete:
+      operationId: delete_channel
+      description: Delete Channel
+      parameters:
+        - $ref: '#/parameters/channel_id'
+      responses:
+        '200':
+          description: Channel
+          schema:
+            $ref: '#/definitions/Channel'
+        '404':
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    patch:
+      operationId: update_channel
+      description: Update Channel
+      parameters:
+        - $ref: '#/parameters/channel_id'
+        - name: name
+          in: body
+          required: true
+          schema:
+            type: string
+        - name: position
+          in: body
+          required: true
+          schema:
+            type: integer
+        - name: topic
+          in: body
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Updated Channel
+          schema:
+            $ref: '#/definitions/Channel'
+
+  '/channels/{channel_id}/messages':
+    get:
+      operationId: get_channel_messages
+      description: Get Messages from a Channel
+      parameters:
+        - $ref: '#/parameters/channel_id'
+        - name: limit
+          in: query
+          type: integer
+        - name: before
+          in: query
+          type: string
+          format: date-time
+        - name: after
+          in: query
+          type: string
+          format: date-time
+      responses:
+        '200':
+          description: List of Messages
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Message'
+        '403':
+          description: Forbidden
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    post:
+      operationId: send_channel_message
+      description: Send a Message to a Channel
+      parameters:
+        - $ref: '#/parameters/channel_id'
+        - $ref: '#/parameters/content'
+        - $ref: '#/parameters/mentions'
+        - name: nonce
+          in: body
+          schema:
+            type: string
+        - name: tts
+          in: body
+          schema:
+            type: boolean
+
+        # When attaching a photo
+        # - name: token
+        #   in: form
+        #   consumes: multipart/form-data
+        #   type: string
+        # - name: file
+        #   in: form
+        #   consumes: multipart/form-data
+        #   type: file
+
+      responses:
+        '200':
+          description: Message
+          schema:
+            $ref: '#/definition/Message'
+
+  '/channels/{channel_id}/messages/{message_id}':
+    patch:
+      operationId: edit_channel_message
+      description: Edit Message
+      parameters:
+        - $ref: '#/parameters/channel_id'
+        - $ref: '#/parameters/message_id'
+        - $ref: '#/parameters/content'
+        - $ref: '#/parameters/mentions'
+      responses:
+        '200':
+          description: Edited Message
+          schema:
+            $ref: '#/definitions/Message'
+
+  '/channels/{channel_id}/messages/{message_id}/ack':
+    post:
+      operationId: ack_channel_message
+      description: Acknowledge a Message
+      parameters:
+        - $ref: '#/parameters/channel_id'
+        - $ref: '#/parameters/message_id'
+      responses:
+        '200':
+          description: OK
+
+  '/channels/{channel_id}/invites':
+    get:
+      operationId: get_channel_invites
+      description: Get a list of InstantInvites to a Channel
+      parameters:
+        - $ref: '#/parameters/channel_id'
+      responses:
+        '200':
+          description: List of InstantInvites to a Channel
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/InstantInvite'
+    post:
+      operationId: create_channel_invite
+      description: Create an InstantInvite to a Channel
+      parameters:
+        - $ref: '#/parameters/channel_id'
+        - name: max_age
+          in: body
+          required: false
+          schema:
+            type: number
+        - name: max_uses
+          in: body
+          required: false
+          schema:
+            type: number
+        - name: temporary
+          in: body
+          required: false
+          schema:
+            type: boolean
+        - name: xkcdpass
+          in: body
+          required: false
+          schema:
+            type: boolean
+        - name: validate
+          in: body
+          required: false
+          schema:
+            # type: null
+            type: string
+      responses:
+        '200':
+          description: An InstantInvite to a Channel
+          schema:
+            $ref: '#/definition/InstantInvite'
+
+
+  '/invite/{invite_slug}':
+    get:
+      operationId: claim_invite
+      description: Claim an InstantInvite
+      parameters:
+        - $ref: '#/parameters/invite_slug'
+      responses:
+        '200':
+          description: InstantInvite claimed successfully
+          schema:
+            $ref: '#/definition/InstantInvite'
+        '404':
+          description: InstantInvite may be invalid or expired
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+
+  '/invites/{invite_slug}':
+    delete:
+      operationId: delete_invite
+      description: Delete an InstantInvite
+      parameters:
+        - $ref: '#/parameters/invite_slug'
+      responses:
+        '200':
+
+  '/channels/{channel_id}/typing':
+    post:
+      operationId: typing
+      description: Extend the 'typing' status 5 seconds
+      parameters:
+        - $ref: '#/parameters/channel_id'
+        - $ref: '#/parameters/message_id'
+      responses:
+        '200':
+          description: OK
+
+  '/guilds/{guild_id}':
+    get:
+      operationId: get_guild_channels
+      description: Get Channels in Guild
+      parameters:
+        - $ref: '#/parameters/guild_id'
+      responses:
+        '200':
+          description: Channels in Guild
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Channel'
+    patch:
+      operationId: update_guild
+      description: Update settings for Guild
+      parameters:
+        - $ref: '#/parameters/guild_id'
+        - name: afk_channel_id
+          in: body
+          required: true
+          schema:
+            # $ref: '#/definitions/Guild#afk_channel_id'
+            type: string
+        - name: afk_timeout
+          in: body
+          required: true
+          schema:
+            # $ref: '#/definitions/Guild#afk_channel_id'
+            type: integer
+        - name: icon
+          in: body
+          required: true
+          schema:
+            # $ref: '#/definitions/Guild#afk_channel_id'
+            type: string
+        - name: name
+          in: body
+          required: true
+          schema:
+            # $ref: '#/definitions/Guild#afk_channel_id'
+            type: string
+        - name: region
+          in: body
+          required: true
+          schema:
+            # $ref: '#/definitions/Guild#afk_channel_id'
+            type: string
+      responses:
+        '200':
+          description: Settings for Guild updated successfully
+          schema:
+            $ref: '#/definitions/Guild'
+
+    post:
+      operationId: create_guild_channel
+      description: Create Channel in Guild
+      parameters:
+        - $ref: '#/parameters/guild_id'
+        - name: name
+          in: body
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: body
+          required: true
+          schema:
+            type: string
+            enum:
+              - voice
+              - text
+      responses:
+        '201':
+          description: Channel created
+          schema:
+            $ref: '#/definitions/Channel'
+
+  /guilds:
+    post:
+      operationId: create_guild
+      description: Create a Guild
+      parameters:
+        - name: icon
+          in: body
+          required: true
+          schema:
+            type: string
+            # format: base64
+        - name: name
+          in: body
+          required: true
+          schema:
+            type: string
+        - name: region
+          in: body
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Guild created successfully
+          schema:
+            $ref: '#/definitions/Guild'
+
+
+  /voice/regions:
+    get:
+      operationId: regions
+      description: Get list of Regions
+      responses:
+        '200':
+          description: List of Regions
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Region'
+
+  /track:
+    post:
+      operationId: track
+      description: Track an Event
+      parameters:
+        - name: event
+          in: body
+          required: true
+          schema:
+            type: string
+        - name: properties
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              Source:
+                type: string
+              Type:
+                type: string
+      responses:
+        '204':
+          description: Event tracked successfully
+
+
+
+definitions:
+  # TODO
+
+  # Mention:
+  # Embed:
+  # Member:
+  # Ban:
+  # Permission:
+
+  User:
+    type: object
+    properties:
+      avatar:
+        type: string
+        # format: url
+      discriminator:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      username:
+        type: string
+      verified:
+        type: boolean
+    # examples:
+    #   application/json:
+    #     avatar: null,
+    #     discriminator: '2968'
+    #     email: d@davo.io
+    #     id: '103986638320861184'
+    #     username: Davo
+    #     verified: true
+
+  UserSettings:
+    type: object
+    properties:
+      locale:
+        type: string
+        example: en-US
+      muted_channels:
+        type: array
+        items:
+          $ref: '#/definitions/Channel'
+      convert_emoticons:
+        type: boolean
+      enable_tts_command:
+        type: boolean
+      inline_attachment_media:
+        type: boolean
+      inline_embed_media:
+        type: boolean
+      message_display_compact:
+        type: boolean
+      render_embeds:
+        type: boolean
+      show_current_game:
+        type: boolean
+    # examples:
+    #   - application/json:
+    #       locale: en-US
+    #       muted_channels: []
+    #       convert_emoticons: true
+    #       enable_tts_command: true
+    #       inline_attachment_media: true
+    #       inline_embed_media: true
+    #       message_display_compact: false
+    #       render_embeds: true
+    #       show_current_game: true
+
+  Message:
+    type: object
+    properties:
+      attachments:
+        type: array
+        items:
+          $ref: '#/definitions/Attachment'
+      author:
+        $ref: '#/definitions/User'
+      channel_id:
+        type: string
+      content:
+        type: strng
+      edited_timestamp:
+        # type: null
+        type: string
+      embeds:
+        type: array
+        items:
+          $ref: '#/definitions/Embed'
+      id:
+        type: string
+      mention_everyone:
+        type: boolean
+      mentions:
+        type: array
+        items:
+          $ref: '#/definitions/Mention'
+      timestamp:
+        type: string
+        format: date-time
+      tts:
+        type: boolean
+    # application/json:
+    #   attachments: []
+    #   author:
+    #     avatar: 014ce9307aba9f0623447a7c833bbe05
+    #     discriminator: 2164
+    #     id: 86222890898305024
+    #     username: djbouche
+    #   channel_id: 106926283220377600
+    #   content: lol
+    #   edited_timestamp: null
+    #   embeds: []
+    #   id: 106928001265975296
+    #   mention_everyone: false
+    #   mentions: []
+    #   timestamp: 2015-10-23T01:33:42.128000+00:00
+    #   tts: false
+
+  Attachment:
+    type: object
+    properties:
+      filename:
+        type: string
+      height:
+        type: integer
+      id:
+        type: string
+      proxy_url:
+        type: string
+        # format: url
+      size:
+        type: integer
+      url:
+        type: string
+        # type: url
+      width:
+        type: integer
+    # application/json:
+    #   filename: Tom-Hanks-tom-hanks-33067228-1024-768.jpg
+    #   height: 659
+    #   id: 125379335472283648
+    #   proxy_url: https://images.discordapp.net/.eJwtykkOAiEQQNG7sAeaKsY-gQfwAoQ24gB0usqYaLy7Q9y9_PynuG1XMYvKvNKs9XKiMrZFEarc8mP0fCdVRtOZOZfaDp1JG3AYEgRMCUxw3sR_QnQ2AET0Nur9aHKX-4Ukf1R_Qpz8d5BmAiuDj-q8HsXrDS4eJ9Q.oHfoQdGUO2o2LtrmXtuaJmxXeaA.jpg
+    #   size: 59832
+    #   url: https://cdn.discordapp.com/attachments/125379273992175618/125379335472283648/Tom-Hanks-tom-hanks-33067228-1024-768.jpg
+    #   width: 660
+
+
+  Channel:
+    type: object
+    properties:
+      guild_id:
+        type: string
+      id:
+        type: string
+      is_private:
+        type: boolean
+      last_message_id:
+        type: string # or null
+      name:
+        type: string
+      permission_overwrites:
+        type: array
+        items:
+          $ref: '#/definition/PermissionOverwrites'
+      position:
+        type: integer
+      topic:
+        # type: null
+        type: string
+      type:
+        type: string
+    # application/json:
+    #   guild_id: 125378772013809664
+    #   id: 125445956350115841
+    #   is_private: false
+    #   last_message_id: null
+    #   name: new
+    #   permission_overwrites: []
+    #   position: 2
+    #   topic: null
+    #   type: text
+
+  Guild:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      owner_id:
+        type: string
+      afk_channel_id:
+        type: string # or null
+      afk_timeout:
+        type: integer
+      embed_channel_id:
+        type: string
+      embed_enabled:
+        type: boolean
+      icon:
+        type: string
+      joined_at:
+        type: string
+        format: date-time
+      region:
+        type: string
+      # roles:
+      #   type: array
+      #   items:
+      #     $ref: '#/definitions/Role'
+    # application/json:
+    #   id: 125463651258728449
+    #   name: test
+    #   owner_id: 125462170350649344
+    #   afk_channel_id: null
+    #   afk_timeout: 300
+    #   embed_channel_id: null
+    #   embed_enabled: false
+    #   icon: bae1bb0ea6b78678674a3950ad9181f3
+    #   joined_at: 2015-12-13T05:07:45.875446+00:00
+    #   region: sydney
+    #   roles: []
+
+  Role:
+    type: object
+    properties:
+      color:
+        type: integer
+      hoist:
+        type: boolean
+      id:
+        type: string
+      managed:
+        type: boolean
+      name:
+        type: string
+      permissions:
+        type: long
+      position:
+        type: integer
+    # application/json:
+    #   color: 0
+    #   hoist: false
+    #   id: 125487617261
+    #   managed: false
+    #   name: '@everyone'
+    #   permissions: 36953089
+    #   position: -1
+
+
+  InstantInvite:
+    type: object
+    required:
+      - code
+      - channel
+      - guild
+      - xkcdpass
+    properties:
+      channel:
+        $ref: '#/definitions/Channel'
+      code:
+        type: string
+      created_at:
+        type: string
+        format: date-time
+      guild:
+        $ref: '#/definitions/Guild'
+      inviter:
+        $ref: '#/definitions/User'
+      max_age:
+        type: number
+      max_uses:
+        type: number
+      uses:
+        type: number
+      revoked:
+        type: boolean
+      temporary:
+        type: boolean
+      xkcdpass:
+        # description: Human readable url slug, appendable to discord.gg/
+        type: string # or null
+    # application/json:
+    #   channel:
+    #     id: 125379273992175618
+    #     name: poemas
+    #     type: text
+    #   code: 0hQ6TaywsrDUFHoi
+    #   created_at: 2015-12-13T04:30:34.644593+00:00
+    #   guild:
+    #     id: 125378772013809664
+    #     name: Discordex
+    #   inviter:
+    #     avatar: null
+    #     discriminator: 2968
+    #     id: 103986638320861184
+    #     username: Davo
+    #   max_age: 1800
+    #   max_uses: 0
+    #   uses: 0
+    #   revoked: false
+    #   temporary: true
+    #   xkcdpass: observer-pudge-roach
+
+  Client:
+    type: object
+    properties:
+      token:
+        description: Auth token
+        type: string
+    # application/json:
+    #   token: MTAzO8g2NjM4MzIwODYxMTg0.CU5fpg.AP3bxuuIQmeFSYC1VBenGXhCJlY
+
+  Gateway:
+    type: object
+    properties:
+      url:
+        description: WSS (Secured WebSocket) URL
+        type: string # url
+    # application/json:
+    #   url: wss://gateway-fafnir.discord.gg
+
+  Region:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      sample_hostname:
+        type: string
+      sample_port:
+        type: number
+    # application/json:
+    #   id: us-west
+    #   name: US West
+    #   sample_hostname: us-west27.discord.gg
+    #   sample_port: 80
