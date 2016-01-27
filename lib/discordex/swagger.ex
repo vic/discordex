@@ -18,14 +18,14 @@ defmodule Discordex.Swagger do
     end
   end
 
-  def defendpoints(swagger) do
+  defp defendpoints(swagger) do
     swagger["paths"]
     |> Enum.map(fn {path, verbs} ->
       verbs
       |> Enum.map(fn {verb, config} ->
         function_name = config["operationId"] |> String.to_atom
         verb = verb |> String.to_atom
-        swagger_params = config["parameters"] |> expand_params(swagger)
+        swagger_params = config["parameters"] |> expand_params(swagger) |> Macro.escape
         defendpoint(swagger, function_name, verb, path, swagger_params)
 
         # Logger.debug("#{function_name}: #{verb} #{template_path} #{inspect params}")
@@ -33,13 +33,13 @@ defmodule Discordex.Swagger do
     end)
   end
 
-  def defendpoint(swagger, function_name, verb, path, swagger_params) do
+  defp defendpoint(swagger, function_name, verb, path, swagger_params) do
     quote location: :keep do
       # @spec parameter_types :: response_types
 
       def unquote(function_name)(client, raw_params) do
         params = raw_params
-        # |> Discordex.Swagger.check_required_params!(unquote(swagger_params))
+        |> Discordex.Swagger.check_required_params!(unquote(swagger_params))
         # |> Discordex.Swagger.set_default_params(unquote(swagger_params))
 
         # Set request parameteres
@@ -62,27 +62,33 @@ defmodule Discordex.Swagger do
         # Generate full url
         full_url = unquote(base_url(swagger)) <> rendered_path
 
-        # {unquote(verb), url}
+        body = ""
+        headers = []
+        options = []
 
-        # unquote_splicing(params)
-        # unquote(base_url) <> unquote(quoted_path)
-        # HTTPoison.request(verb, )
+        HTTPoison.request(unquote(verb), full_url, body, headers, options)
       end
     end
   end
 
   def check_required_params!(params, swagger_params) do
-    swagger_params
-    |> Enum.reduce(params, fn(swagger_param, params) ->
+    IO.inspect swagger_params
+    missing_params = Enum.flat_map(swagger_params, fn(swagger_param) ->
       param_key = String.to_atom(swagger_param["name"])
+
       # Enforce required parameter
-      if swagger_param["required"] do
-        # TODO: Raise all missing parameters, not only one
-        unless Keyword.has_key?(params, param_key) do
-          raise "missing #{param_key}"
-        end
+      if swagger_param["required"] && !Keyword.has_key?(params, param_key) do
+        [param_key]
+      else
+        []
       end
     end)
+
+    if length(missing_params) > 0 do
+      raise "Missing parameters: #{inspect(missing_params)}"
+    end
+
+    params
   end
 
   def set_default_params(params, swagger_params) do
@@ -91,6 +97,8 @@ defmodule Discordex.Swagger do
       param_key = String.to_atom(swagger_param["name"])
       if swagger_param["default"] do
         Keyword.update(params, param_key, swagger_param["default"], &(&1))
+      else
+        params
       end
     end)
   end

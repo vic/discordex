@@ -6,15 +6,21 @@ defmodule Discordex.SwaggerTest do
     Discordex.Swagger.generate_functions
   end
 
-  test "swagger" do
-    assert Swag.get_user("1", user_id: "123abc") == "https://discordapp.com/api/users/123abc"
+  @client %{}
+
+  test "request is made" do
+    {:ok, response} = Swag.get_user(@client, user_id: "davoclavo")
+    assert response.status_code == 200
   end
 
   test "missing parameter" do
-    # TODO: Create proper Error
     assert_raise RuntimeError, fn ->
-      Swag.get_user("1", username: "abc")
+      Swag.get_user(@client, username: "abc")
     end
+  end
+
+  test "set default params" do
+    # TODO:
   end
 
 end
